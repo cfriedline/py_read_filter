@@ -10,9 +10,10 @@ from itertools import izip
 import shutil
 import stopwatch
 import traceback
-from collectins import defaultdict, deque
+from collections import defaultdict, deque
 from multiprocessing import Pool, Manager
 import multiprocessing
+import argparse
 
 
 def format_fastq_tuple(title, seq, qual):
@@ -296,12 +297,21 @@ def setup_cluster_nodes(dview):
 
     
 def get_args():
-    pass
+    p = argparse.ArgumentParser(description="Python Read Filterer")
+    p.add_argument("--read1")
+    p.add_argument("--read2")
+    print sys.argv
+    
+    if len(sys.argv) < 2:
+        p.print_help()
+        sys.exit()
+    args = p.parse_args()
+    return args
 
 
 def main():
-    pass
+    args = get_args()
 
 
-if '__name__' == '__main__':
+if __name__ == '__main__':
     main()
