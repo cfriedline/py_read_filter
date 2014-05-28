@@ -30,7 +30,7 @@ def format_fastq_tuple(title, seq, qual):
     return "@%s\n%s\n+\n%s\n" % (title, seq, qual)
 
 
-def process_single_file(f):
+def process_single_file(f, args):
     tmp = tempfile.NamedTemporaryFile(delete=False)
     basename = os.path.basename(f)
     count = 0
@@ -42,7 +42,7 @@ def process_single_file(f):
             qual = qual[1:]
             
         if "N" not in seq:
-            scores = eval_quality(qual)
+            scores = eval_quality(qual, args)
             if scores:
                 if len(scores) != len(seq):
                     seq = seq[0:len(scores)]
@@ -77,7 +77,7 @@ def collapse_results(source, results):
     return out
 
 
-def process_single(seqs):
+def process_single(seqs, args):
     timer = stopwatch.Timer()
     pool = Pool()
     hostname = socket.gethostname()
@@ -89,7 +89,7 @@ def process_single(seqs):
         source = k
         for f in temp_files:
             try:
-                p = pool.apply_async(process_single_file, (f,))
+                p = pool.apply_async(process_single_file, (f,args))
                 results.append(p)
 #                 print f
 #                 process_single_file(f)
@@ -145,24 +145,20 @@ def get_qual_scores(q):
     return numpy.array([qual, numpy.mean(qual)])
 
 
-def eval_quality(q):
+def eval_quality(q, args):
     qual = get_qual_scores(q)
     scores = qual[0]
-    win_size = 5
-    qual_cutoff = 30
-    len_cutoff = 0.5
-    
-    if qual[1] < qual_cutoff:
+
+    if qual[1] < args.qual_cutoff:
         return False
     
     below_cutoff = 0.0
-    window = deque(maxlen=win_size)
-    qual_perc_cutoff = 0.20
+    window = deque(maxlen=args.win_size)
     win_end = win_size
     last_good = None
     for s in scores:
         window.append(s)
-        if s < qual_cutoff:
+        if s < args.qual_cutoff:
             below_cutoff += 1  # keep track of scores below the quality cutoff
         if len(window) == win_size:
             if numpy.mean(window) < qual_cutoff:
@@ -179,14 +175,14 @@ def eval_quality(q):
         
     # perc_len = float(len(scores))/len(qual[0])
 
-    if perc_below > qual_perc_cutoff:
+    if perc_below > args.qual_perc_cutoff:
         # drop reads if overall bases have quality values < cutoff,
         # even if average is ok
         return False
     return scores
 
 
-def process_paired_files(file1, file2, queue):
+def process_paired_files(file1, file2, queue, args):
     f1 = FastqGeneralIterator(open(file1))
     f2 = FastqGeneralIterator(open(file2))
 
@@ -205,8 +201,8 @@ def process_paired_files(file1, file2, queue):
                 pair[1] = pair[1][1:]
 
         if "N" not in s1 and "N" not in s2:
-            scores1 = eval_quality(q1)
-            scores2 = eval_quality(q2)
+            scores1 = eval_quality(q1, args)
+            scores2 = eval_quality(q2, args)
             if scores1 and scores2:
                 if len(scores1) != len(s1):
                     s1 = s1[0:len(scores1)]
@@ -251,7 +247,7 @@ def collapse_paired_results(sources, results):
     return outs
 
 
-def process_paired(seqs):
+def process_paired(seqs, args):
     timer = stopwatch.Timer()
     splits = split_file([seqs[0], seqs[1]])
     sources = []
@@ -268,7 +264,7 @@ def process_paired(seqs):
         pairs = 0
 
     for temp1, temp2 in izip(tmpfiles[0], tmpfiles[1]):
-        p = pool.apply_async(process_paired_files, (temp1, temp2, queue))
+        p = pool.apply_async(process_paired_files, (temp1, temp2, queue, args))
         pairs += 1
         results.append(p)
     pool.close()
