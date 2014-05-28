@@ -14,7 +14,7 @@ from collections import defaultdict, deque
 from multiprocessing import Pool, Manager
 import multiprocessing
 import argparse
-import fabric
+from fabric.api import local
 import logging
 
 log = logging.getLogger(__name__)
@@ -306,12 +306,9 @@ def get_args():
     p = argparse.ArgumentParser(description="Python Read Filterer")
     p.add_argument("--read1")
     p.add_argument("--read2")
-    p.add_argument("--cluster_nodes", default=1)
     p.add_argument("--cluster_profile", default="default")
-    p.add_argument("--cluster_delay", default=15)
-    p.add_argument("--sge", type=bool, default=False)
     p.add_argument("--win_size", default=5)
-    p.add_arguymetn("--qual_cutoff", default=30)
+    p.add_argument("--qual_cutoff", default=30)
     p.add_argument("--len_cutoff", default=0.5)
     p.add_argument("--qual_perc_cutoff", default=0.20)
     
@@ -322,12 +319,16 @@ def get_args():
     args = p.parse_args()
     return args
 
-def start_cluster(args):
-    pass
+def get_client(args):
+    log.info("connecting to cluster %s" % args.cluster_profile)
+    return Client(profile=args.cluster_profile)
 
 def main():
     args = get_args()
-    start_cluster(args)
+    rc = get_client(args)
 
 if __name__ == '__main__':
-    main()
+    log.warn("You must have an IPython cluster running to continue")
+    answer = raw_input("Continue (y/n) ")
+    if answer.lower() == "y":
+        main()
