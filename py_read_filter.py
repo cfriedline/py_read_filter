@@ -15,6 +15,7 @@ from multiprocessing import Pool, Manager
 import multiprocessing
 import argparse
 from fabric.api import local
+from IPython import embed
 import logging
 
 log = logging.getLogger(__name__)
@@ -351,4 +352,8 @@ if __name__ == '__main__':
     # log.warn("You must have an IPython cluster running to continue")
     # answer = raw_input("Continue (y/n) ")
     # if answer.lower() == "y":
-    main()
+    try:
+        main()
+    except:
+        traceback.print_exc()
+        embed()
