@@ -338,6 +338,9 @@ def check_path(args):
 def main():
     args = get_args()
     rc = get_client(args)
+    dview = rc[:]
+    lview = rc.load_balanced_view()
+    setup_cluster_nodes(dview)
     check_path(args)
     if args.read2:
         process_paired(args)
@@ -345,7 +348,7 @@ def main():
         process_single(args)
 
 if __name__ == '__main__':
-    log.warn("You must have an IPython cluster running to continue")
-    answer = raw_input("Continue (y/n) ")
-    if answer.lower() == "y":
-        main()
+    # log.warn("You must have an IPython cluster running to continue")
+    # answer = raw_input("Continue (y/n) ")
+    # if answer.lower() == "y":
+    main()
