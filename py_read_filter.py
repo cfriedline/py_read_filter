@@ -31,7 +31,7 @@ def process_single_file(f):
             seq = seq[1:]
             qual = qual[1:]
             
-        if not "N" in seq:
+        if "N" not in seq:
             scores = eval_quality(qual)
             if scores:
                 if len(scores) != len(seq):
@@ -194,7 +194,7 @@ def process_paired_files(file1, file2, queue):
                 pair[0] = pair[0][1:]
                 pair[1] = pair[1][1:]
 
-        if not "N" in s1 and not "N" in s2:
+        if "N" not in s1 and "N" not in s2:
             scores1 = eval_quality(q1)
             scores2 = eval_quality(q2)
             if scores1 and scores2:
