@@ -1,6 +1,23 @@
 from IPython.parallel import Client
-import os, sys, socket, numpy, gzip
+import sys
+import os
+import socket
+import numpy
+import gzip
+import tempfile
+from Bio.SeqIO.QualityIO import FastqGeneralIterator
+from itertools import izip
+import shutil
+import stopwatch
+import traceback
+from collectins import defaultdict, deque
+from multiprocessing import Pool, Manager
+import multiprocessing
 
+
+def format_fastq_tuple(title, seq, qual):
+    assert len(seq) == len(qual)
+    return "@%s\n%s\n+\n%s\n" % (title, seq, qual)
 
 
 def process_single_file(f):
@@ -28,9 +45,14 @@ def process_single_file(f):
         count += 1
         
         if count % 10000 == 0:
-            print("%s, %s, %d, %d, %d" % (socket.gethostname(), basename, count, n, trimmed))
+            print "%s, %s, %d, %d, %d" % (socket.gethostname(),
+                                          basename,
+                                          count,
+                                          n,
+                                          trimmed)
     tmp.close()
     return tmp.name
+
 
 def collapse_results(source, results):
     out = source.replace(".gz", "_processed.fastq")
@@ -42,7 +64,8 @@ def collapse_results(source, results):
     shutil.copy(temp.name, out)
     os.remove(temp.name)
     x = [os.remove(x) for x in results]
-    return out 
+    return out
+
 
 def process_single(seqs):
     timer = stopwatch.Timer()
@@ -61,7 +84,7 @@ def process_single(seqs):
 #                 process_single_file(f)
             except:
                 traceback.print_exc()
-    pool.close() 
+    pool.close()
     pool.join()
     
     #collapse processed temp files
@@ -104,9 +127,11 @@ def split_file(seqs):
 def convert_qual(q):
     return ord(q)-33
 
+
 def get_qual_scores(q):
-    qual = [ord(x)-33 for x in q] #list comps seems to be fastest here
+    qual = [ord(x)-33 for x in q]  # list comps seems to be fastest here
     return numpy.array([qual, numpy.mean(qual)])
+
 
 def eval_quality(q):
     qual = get_qual_scores(q)
@@ -126,20 +151,26 @@ def eval_quality(q):
     for s in scores:
         window.append(s)
         if s < qual_cutoff:
-            below_cutoff += 1 #keep track of scores below the quality cutoff
+            below_cutoff += 1  # keep track of scores below the quality cutoff
         if len(window) == win_size:
             if numpy.mean(window) < qual_cutoff:
                 if last_good is None:
-                    last_good = win_end                    
+                    last_good = win_end
                     if float(last_good)/len(scores) < len_cutoff:
-                        return False    # then it's too short                
-            win_end += 1 
+                        return False  # then it's too short
+            win_end += 1
     perc_below = below_cutoff/len(scores)
+
     if last_good:
-        scores = scores[0:(last_good-1)] #trim the scores if it will be long enough
-    perc_len = float(len(scores))/len(qual[0])
+        # trim the scores if it will be long enough
+        scores = scores[0:(last_good-1)]
+        
+    # perc_len = float(len(scores))/len(qual[0])
+
     if perc_below > qual_perc_cutoff:
-        return False #drop reads if overall bases have quality values < cutoff, even if average is ok
+        # drop reads if overall bases have quality values < cutoff,
+        # even if average is ok
+        return False
     return scores
 
 
@@ -156,7 +187,7 @@ def process_paired_files(file1, file2, queue):
     n = 0
     trimmed = 0
     for (h1, s1, q1), (h2, s2, q2) in izip(f1, f2):
-        for pair in [[s1,q1],[s2,q2]]:
+        for pair in [[s1, q1], [s2, q2]]:
             if pair[0].startswith("N"):
                 pair[0] = pair[0][1:]
                 pair[1] = pair[1][1:]
@@ -180,10 +211,15 @@ def process_paired_files(file1, file2, queue):
 
         count += 1
         if count % 10000 == 0:
-            queue.put("%s, %s, %d, %d, %d" % (socket.gethostname(), basename, count, n, trimmed))
+            queue.put("%s, %s, %d, %d, %d" % (socket.gethostname(),
+                                              basename,
+                                              count,
+                                              n,
+                                              trimmed))
     [x.close() for x in [tmp1, tmp2]]
     queue.put("DONE")
     return tmp1.name, tmp2.name
+
 
 def collapse_paired_results(sources, results):
     outs = []
@@ -202,23 +238,23 @@ def collapse_paired_results(sources, results):
             os.remove(p)
     return outs
 
+
 def process_paired(seqs):
     timer = stopwatch.Timer()
-    files = [x[0] for x in seqs]
-#     temp1 = create_test_file(seqs[0][0], 10000)
-#     temp2 = create_test_file(seqs[1][0], 10000)
-
     splits = split_file([seqs[0], seqs[1]])
     sources = []
     tmpfiles = []
     pool = Pool()
     manager = Manager()
     queue = manager.Queue()
+
     for k, v in splits.items():
         sources.append(k)
-        tmpfiles.append(v)    
-    results = []
-    pairs = 0
+        tmpfiles.append(v)
+        results = []
+
+        pairs = 0
+
     for temp1, temp2 in izip(tmpfiles[0], tmpfiles[1]):
         p = pool.apply_async(process_paired_files, (temp1, temp2, queue))
         pairs += 1
@@ -242,6 +278,7 @@ def process_paired(seqs):
     timer.stop()
     return socket.gethostname(), sources, res, timer.elapsed
 
+
 def setup_cluster_nodes(dview):
     dview['process_paired'] = process_paired
     dview['process_paired_files'] = process_paired_files
@@ -253,12 +290,16 @@ def setup_cluster_nodes(dview):
     dview['process_single'] = process_single
     dview['collapse_results'] = collapse_results
     dview['process_single_file'] = process_single_file 
+    dview['format_fastq_tuple'] = format_fastq_tuple
 
+    
 def get_args():
     pass
-    
+
+
 def main():
     pass
 
+
 if '__name__' == '__main__':
-	main()
+    main()
