@@ -74,27 +74,29 @@ def process_single(seqs):
     splits = split_file(seqs)
     results = []
     source = None
+
     for k, temp_files in splits.items():
         source = k
         for f in temp_files:
             try:
                 p = pool.apply_async(process_single_file, (f,))
-                results.append(p) 
+                results.append(p)
 #                 print f
 #                 process_single_file(f)
             except:
                 traceback.print_exc()
+
     pool.close()
     pool.join()
     
-    #collapse processed temp files
+    # collapse processed temp files
     res = collapse_results(source, [x.get() for x in results])
     
-    #remove temp split source files
+    # remove temp split source files
     for k, v in splits.items():
-        x = [os.remove(x) for x in v]   
+        x = [os.remove(x) for x in v]
     timer.stop()
-    return socket.gethostname(), source, res, timer.elapsed
+    return hostname, source, res, timer.elapsed
 
 
 def split_file(seqs):
@@ -289,7 +291,7 @@ def setup_cluster_nodes(dview):
     dview['split_file'] = split_file
     dview['process_single'] = process_single
     dview['collapse_results'] = collapse_results
-    dview['process_single_file'] = process_single_file 
+    dview['process_single_file'] = process_single_file
     dview['format_fastq_tuple'] = format_fastq_tuple
 
     
