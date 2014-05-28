@@ -77,7 +77,8 @@ def collapse_results(source, results):
     return out
 
 
-def process_single(seqs, args):
+def process_single(args):
+    seqs = args.read1
     timer = stopwatch.Timer()
     pool = Pool()
     hostname = socket.gethostname()
@@ -247,7 +248,8 @@ def collapse_paired_results(sources, results):
     return outs
 
 
-def process_paired(seqs, args):
+def process_paired(args):
+    seqs = [args.read1, args.read2]
     timer = stopwatch.Timer()
     splits = split_file([seqs[0], seqs[1]])
     sources = []
@@ -323,9 +325,24 @@ def get_client(args):
     log.info("connecting to cluster %s" % args.cluster_profile)
     return Client(profile=args.cluster_profile)
 
+def check_path(args):
+    not_exist = []
+    if args.read1 and not os.path.exists(args.read1):
+        not_exist.append(args.read1)
+    if args.read2 and not os.path.exists(args.read2):
+        not_exist.append(args.read2)
+    if len(not_exist) > 0:
+        raise IOError("%s does not exist" % not_exist)
+
+
 def main():
     args = get_args()
     rc = get_client(args)
+    check_path(args)
+    if args.read2:
+        process_paired(args)
+    else:
+        process_single(args)
 
 if __name__ == '__main__':
     log.warn("You must have an IPython cluster running to continue")
