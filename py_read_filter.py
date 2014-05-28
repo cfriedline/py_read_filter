@@ -14,7 +14,16 @@ from collections import defaultdict, deque
 from multiprocessing import Pool, Manager
 import multiprocessing
 import argparse
+import fabric
+import logging
 
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+ch = logging.StreamHandler(sys.stdout)
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+log.addHandler(ch)
 
 def format_fastq_tuple(title, seq, qual):
     assert len(seq) == len(qual)
@@ -297,21 +306,32 @@ def setup_cluster_nodes(dview):
 
     
 def get_args():
+    log.info("getting args")
     p = argparse.ArgumentParser(description="Python Read Filterer")
     p.add_argument("--read1")
     p.add_argument("--read2")
-    print sys.argv
+    p.add_argument("--cluster_nodes", default=1)
+    p.add_argument("--cluster_profile", default="default")
+    p.add_argument("--cluster_delay", default=15)
+    p.add_argument("--sge", type=bool, default=False)
+    p.add_argument("--win_size", default=5)
+    p.add_arguymetn("--qual_cutoff", default=30)
+    p.add_argument("--len_cutoff", default=0.5)
+    p.add_argument("--qual_perc_cutoff", default=0.20)
     
     if len(sys.argv) < 2:
         p.print_help()
         sys.exit()
+
     args = p.parse_args()
     return args
 
+def start_cluster(args):
+    pass
 
 def main():
     args = get_args()
-
+    start_cluster(args)
 
 if __name__ == '__main__':
     main()
