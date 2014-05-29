@@ -113,6 +113,11 @@ def process_single(args):
     return hostname, source, res, timer.elapsed
 
 
+def get_file_handle(f):
+    if f.endswith('.gz'):
+         return gzip.open(f)
+    return open(f)
+
 def split_file(seqs):
     d = defaultdict(list)
     num_cpu = multiprocessing.cpu_count()
@@ -123,7 +128,7 @@ def split_file(seqs):
         reads_per_file = float(num)//num_cpu
         read_idx = 0
         file_num = 0
-        for title, seq, qual in FastqGeneralIterator(gzip.open(f)):
+        for title, seq, qual in FastqGeneralIterator(get_file_handle(f)):
             if read_idx == 0:
                 t = tempfile.NamedTemporaryFile(delete=False)
                 print socket.gethostname(), t.name, file_num + 1, "/", num_cpu
@@ -254,9 +259,10 @@ def collapse_paired_results(sources, results):
 def get_num_seqs(f):
     log.info("getting number of sequences in %s" % f)
     count = 0
-    fastq = gzip.open(f)
-    for title, seq, qual in FastqGeneralIterator(fastq):
+    fastq = None
+    for title, seq, qual in FastqGeneralIterator(get_file_handle(f)):
         count += 1
+    log.info("%d reads in %s" % (count, f))
     return (f, count)
 
 def process_paired(args):
@@ -318,7 +324,6 @@ def setup_cluster_nodes(dview):
 
     
 def get_args():
-    log.info("getting args")
     p = argparse.ArgumentParser(description="Python Read Filterer")
     p.add_argument("--read1")
     p.add_argument("--read2")
