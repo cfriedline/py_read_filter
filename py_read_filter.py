@@ -392,7 +392,6 @@ def setup_db():
 def main():
     args = get_args()
     db = setup_db()
-    return
     rc = get_client(args)
     dview = rc[:]
     lview = rc.load_balanced_view()
