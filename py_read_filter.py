@@ -359,7 +359,7 @@ def get_client(args):
         c = Client(profile=args.cluster_profile)
         return c
     except:
-        raise Exception("Can't connect to IPython cluster")
+        raise Exception("Can't connect to IPython cluster named '%s'" % args.cluster_profile)
 
 def check_path(args):
     log.info("checking paths")
