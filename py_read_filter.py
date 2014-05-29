@@ -354,7 +354,12 @@ def get_args():
 
 def get_client(args):
     log.info("connecting to cluster %s" % args.cluster_profile)
-    return Client(profile=args.cluster_profile)
+    c = None
+    try:
+        c = Client(profile=args.cluster_profile)
+        return c
+    except:
+        raise Exception("Can't connect to IPython cluster")
 
 def check_path(args):
     log.info("checking paths")
