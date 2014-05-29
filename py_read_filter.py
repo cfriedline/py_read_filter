@@ -381,8 +381,10 @@ def check_path(args):
     not_exist = []
     if args.read1 and not os.path.exists(args.read1):
         not_exist.append(args.read1)
+        args.read1 = os.path.abspath(args.read1)
     if args.read2 and not os.path.exists(args.read2):
         not_exist.append(args.read2)
+        args.read2 = os.path.abspath(args.read2)
     if len(not_exist) > 0:
         raise IOError("%s does not exists counts()" % not_exist)
 
