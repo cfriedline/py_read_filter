@@ -268,7 +268,7 @@ def get_num_seqs(f, args):
     log.info("getting number of sequences in %s" % f)
     if args.count_file and os.path.exists(args.count_file):
         count_dict = read_count_file(args.count_file)
-        return (f, count_dict[f])
+        return (f, count_dict[os.path.abspath(f)])
     count = 0
     fastq = None
     for title, seq, qual in FastqGeneralIterator(get_file_handle(f)):
