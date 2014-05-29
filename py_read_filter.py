@@ -17,6 +17,7 @@ import argparse
 from fabric.api import local
 from IPython import embed
 import logging
+import sqlite3 as lite
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -79,7 +80,7 @@ def collapse_results(source, results):
     return out
 
 
-def process_single(args):
+def process_single(args, db):
     log.info("starting single processing")
     seqs = get_num_seqs(args.read1, args)
     timer = stopwatch.Timer()
@@ -264,11 +265,11 @@ def read_count_file(count_file):
         count_dict[data[0]] = int(data[1])
     return count_dict
 
-def get_num_seqs(f, args):
+def get_read_counts(f, db):
+    print db.execute("select num_reads from counts where name ='%s'" % f)
+
+def get_num_seqs(f, db):
     log.info("getting number of sequences in %s" % f)
-    if args.count_file and os.path.exists(args.count_file):
-        count_dict = read_count_file(args.count_file)
-        return (f, count_dict[os.path.abspath(f)])
     count = 0
     fastq = None
     for title, seq, qual in FastqGeneralIterator(get_file_handle(f)):
@@ -276,9 +277,17 @@ def get_num_seqs(f, args):
     log.info("%d reads in %s" % (count, f))
     return (f, count)
 
-def process_paired(args):
+def process_paired(args, db):
     log.info("starting paired processing")
-    seqs = [get_num_seqs(args.read1, args), get_num_seqs(args.read2, args)]
+    seqs = [get_num_seqs(args.read1, db), get_num_seqs(args.read2, db)]
+    for seq in seqs:
+        file, count = seq
+        db.execute("insert into counts values (%s, %d)" % (file, count))
+    try:
+        db.commit()
+    except:
+        pass
+    return
     timer = stopwatch.Timer()
     splits = split_file([seqs[0], seqs[1]])
     sources = []
@@ -369,20 +378,31 @@ def check_path(args):
     if args.read2 and not os.path.exists(args.read2):
         not_exist.append(args.read2)
     if len(not_exist) > 0:
-        raise IOError("%s does not exist" % not_exist)
+        raise IOError("%s does not exists counts()" % not_exist)
+
+
+def setup_db():
+    db = lite.connect("cache.db")
+    # db.execute("drop table counts")
+    db.execute("create table if not exists counts(name TEXT PRIMARY KEY, num_reads INT)")
+    db.commit()
+    return db
 
 
 def main():
     args = get_args()
+    db = setup_db()
+    return
     rc = get_client(args)
     dview = rc[:]
     lview = rc.load_balanced_view()
     setup_cluster_nodes(dview)
     check_path(args)
     if args.read2:
-        process_paired(args)
+        process_paired(args, db)
     else:
-        process_single(args)
+        process_single(args, db)
+    db.close()
 
 if __name__ == '__main__':
     # log.warn("You must have an IPython cluster running to continue")
@@ -392,4 +412,4 @@ if __name__ == '__main__':
         main()
     except:
         traceback.print_exc()
-        embed()
+        # embed()
