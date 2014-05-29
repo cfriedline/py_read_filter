@@ -353,7 +353,6 @@ def get_args():
     p.add_argument("--qual_cutoff", default=30)
     p.add_argument("--len_cutoff", default=0.5)
     p.add_argument("--qual_perc_cutoff", default=0.20)
-    p.add_argument("--count_file", default=None)
     
     if len(sys.argv) < 2:
         p.print_help()
