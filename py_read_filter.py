@@ -388,6 +388,7 @@ def setup_db():
     db = lite.connect("cache.db")
     # db.execute("drop table counts")
     db.execute("create table if not exists counts(name TEXT PRIMARY KEY, num_reads INT)")
+    db.execute("create table if not exists filtered_counts(name TEXT PRIMARY KEY, num_reads INT)")
     db.commit()
     return db
 
