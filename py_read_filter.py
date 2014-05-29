@@ -81,7 +81,7 @@ def collapse_results(source, results):
 
 def process_single(args):
     log.info("starting single processing")
-    seqs = get_num_seqs(args.read1)
+    seqs = get_num_seqs(args.read1, args)
     timer = stopwatch.Timer()
     pool = Pool()
     hostname = socket.gethostname()
@@ -256,8 +256,19 @@ def collapse_paired_results(sources, results):
             os.remove(p)
     return outs
 
-def get_num_seqs(f):
+def read_count_file(count_file):
+    count_dict = {}
+    for line in open(count_file):
+        line = line.strip()
+        data = line.split("\t")
+        count_dict[data[0]] = int(data[1])
+    return count_dict
+
+def get_num_seqs(f, args):
     log.info("getting number of sequences in %s" % f)
+    if args.count_file and os.path.exists(args.count_file):
+        count_dict = read_count_file(args.count_file)
+        return (f, count_dict[f])
     count = 0
     fastq = None
     for title, seq, qual in FastqGeneralIterator(get_file_handle(f)):
@@ -267,7 +278,7 @@ def get_num_seqs(f):
 
 def process_paired(args):
     log.info("starting paired processing")
-    seqs = [get_num_seqs(args.read1), get_num_seqs(args.read2)]
+    seqs = [get_num_seqs(args.read1, args), get_num_seqs(args.read2, args)]
     timer = stopwatch.Timer()
     splits = split_file([seqs[0], seqs[1]])
     sources = []
@@ -332,6 +343,7 @@ def get_args():
     p.add_argument("--qual_cutoff", default=30)
     p.add_argument("--len_cutoff", default=0.5)
     p.add_argument("--qual_perc_cutoff", default=0.20)
+    p.add_argument("--count_file", default=None)
     
     if len(sys.argv) < 2:
         p.print_help()
