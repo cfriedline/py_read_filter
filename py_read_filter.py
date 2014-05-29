@@ -266,15 +266,21 @@ def read_count_file(count_file):
     return count_dict
 
 def get_read_counts(f, db):
-    print db.execute("select num_reads from counts where name ='%s'" % f)
+    res = db.execute("select num_reads from counts where name ='%s'" % f).fetchall()
+    if len(res) > 0:
+        return res[0][0]
+    else:
+        return -1
 
 def get_num_seqs(f, db):
     log.info("getting number of sequences in %s" % f)
-    count = 0
-    fastq = None
-    for title, seq, qual in FastqGeneralIterator(get_file_handle(f)):
-        count += 1
-    log.info("%d reads in %s" % (count, f))
+    count = get_read_counts(f, db)
+    if count < 0:
+        count = 0
+        fastq = None
+        for title, seq, qual in FastqGeneralIterator(get_file_handle(f)):
+            count += 1
+        log.info("%d reads in %s" % (count, f))
     return (f, count)
 
 def process_paired(args, db):
