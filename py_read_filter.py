@@ -281,18 +281,13 @@ def get_num_seqs(f, db):
         for title, seq, qual in FastqGeneralIterator(get_file_handle(f)):
             count += 1
         log.info("%d reads in %s" % (count, f))
+        db.execute("insert into counts values (%s, %d)" % (f, count))
+        db.commit()
     return (f, count)
 
 def process_paired(args, db):
     log.info("starting paired processing")
     seqs = [get_num_seqs(args.read1, db), get_num_seqs(args.read2, db)]
-    for seq in seqs:
-        file, count = seq
-        db.execute("insert into counts values (%s, %d)" % (file, count))
-    try:
-        db.commit()
-    except:
-        pass
     return
     timer = stopwatch.Timer()
     splits = split_file([seqs[0], seqs[1]])
