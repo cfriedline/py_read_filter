@@ -346,14 +346,14 @@ def setup_cluster_nodes(dview):
     
 def get_args():
     p = argparse.ArgumentParser(description="Python Read Filterer")
-    p.add_argument("--read1")
-    p.add_argument("--read2")
+    p.add_argument("--read1", default=None)
+    p.add_argument("--read2", default=None)
     p.add_argument("--cluster_profile", default="default")
     p.add_argument("--win_size", default=5)
     p.add_argument("--qual_cutoff", default=30)
     p.add_argument("--len_cutoff", default=0.5)
     p.add_argument("--qual_perc_cutoff", default=0.20)
-    
+
     if len(sys.argv) < 2:
         p.print_help()
         sys.exit()
@@ -375,9 +375,12 @@ def check_path(args):
     not_exist = []
     if args.read1 and not os.path.exists(args.read1):
         not_exist.append(args.read1)
+    elif args.read1:
         args.read1 = os.path.abspath(args.read1)
+
     if args.read2 and not os.path.exists(args.read2):
         not_exist.append(args.read2)
+    elif args.read2:
         args.read2 = os.path.abspath(args.read2)
     if len(not_exist) > 0:
         raise IOError("%s does not exists counts()" % not_exist)
@@ -398,6 +401,8 @@ def main():
     rc = get_client(args)
     dview = rc[:]
     lview = rc.load_balanced_view()
+    args.dview=dview
+    args.lview=lview
     setup_cluster_nodes(dview)
     check_path(args)
     if args.read2:
