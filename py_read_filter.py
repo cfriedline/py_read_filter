@@ -81,7 +81,7 @@ def collapse_results(source, results):
 
 def process_single(args):
     log.info("starting single processing")
-    seqs = args.read1
+    seqs = get_num_seqs(args.read1)
     timer = stopwatch.Timer()
     pool = Pool()
     hostname = socket.gethostname()
@@ -251,10 +251,17 @@ def collapse_paired_results(sources, results):
             os.remove(p)
     return outs
 
+def get_num_seqs(f):
+    log.info("getting number of sequences in %s" % f)
+    count = 0
+    fastq = gzip.open(f)
+    for title, seq, qual in FastqGeneralIterator(fastq):
+        count += 1
+    return (f, count)
 
 def process_paired(args):
     log.info("starting paired processing")
-    seqs = [args.read1, args.read2]
+    seqs = [get_num_seqs(args.read1), get_num_seqs(args.read2)]
     timer = stopwatch.Timer()
     splits = split_file([seqs[0], seqs[1]])
     sources = []
@@ -307,6 +314,7 @@ def setup_cluster_nodes(dview):
     dview['collapse_results'] = collapse_results
     dview['process_single_file'] = process_single_file
     dview['format_fastq_tuple'] = format_fastq_tuple
+    dview['get_num_seqs'] = get_num_seqs
 
     
 def get_args():
