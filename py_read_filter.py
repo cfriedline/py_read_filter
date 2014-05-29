@@ -66,6 +66,7 @@ def process_single_file(f, args):
 
 
 def collapse_results(source, results):
+    log.info("collapsing results")
     out = source.replace(".gz", "_processed.fastq")
     temp = tempfile.NamedTemporaryFile(delete=False)
     for r in results:
@@ -79,6 +80,7 @@ def collapse_results(source, results):
 
 
 def process_single(args):
+    log.info("starting single processing")
     seqs = args.read1
     timer = stopwatch.Timer()
     pool = Pool()
@@ -232,6 +234,7 @@ def process_paired_files(file1, file2, queue, args):
 
 
 def collapse_paired_results(sources, results):
+    log.info("collapsing paired results")
     outs = []
     for i in xrange(len(sources)):
         out = sources[i].replace(".gz", "_processed.fastq")
@@ -250,6 +253,7 @@ def collapse_paired_results(sources, results):
 
 
 def process_paired(args):
+    log.info("starting paired processing")
     seqs = [args.read1, args.read2]
     timer = stopwatch.Timer()
     splits = split_file([seqs[0], seqs[1]])
@@ -291,6 +295,7 @@ def process_paired(args):
 
 
 def setup_cluster_nodes(dview):
+    log.info("setting up cluster nodes")
     dview['process_paired'] = process_paired
     dview['process_paired_files'] = process_paired_files
     dview['collapse_paired_results'] = collapse_paired_results
@@ -327,6 +332,7 @@ def get_client(args):
     return Client(profile=args.cluster_profile)
 
 def check_path(args):
+    log.info("checking paths")
     not_exist = []
     if args.read1 and not os.path.exists(args.read1):
         not_exist.append(args.read1)
