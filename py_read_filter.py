@@ -265,29 +265,9 @@ def read_count_file(count_file):
         count_dict[data[0]] = int(data[1])
     return count_dict
 
-def get_read_counts(f, db):
-    res = db.execute("select num_reads from counts where name ='%s'" % f).fetchall()
-    if len(res) > 0:
-        return res[0][0]
-    else:
-        return -1
-
-def get_num_seqs(f, db):
-    log.info("getting number of sequences in %s" % f)
-    count = get_read_counts(f, db)
-    if count < 0:
-        count = 0
-        fastq = None
-        for title, seq, qual in FastqGeneralIterator(get_file_handle(f)):
-            count += 1
-        log.info("%d reads in %s" % (count, f))
-        db.execute("insert into counts values ('%s', %d)" % (f, count))
-        db.commit()
-    return (f, count)
-
-def process_paired(args, db):
+def process_paired(args):
     log.info("starting paired processing")
-    seqs = [get_num_seqs(args.read1, db), get_num_seqs(args.read2, db)]
+    seqs = [get_num_seqs(args.read1), get_num_seqs(args.read2)]
     return
     timer = stopwatch.Timer()
     splits = split_file([seqs[0], seqs[1]])
@@ -353,6 +333,7 @@ def get_args():
     p.add_argument("--qual_cutoff", default=30)
     p.add_argument("--len_cutoff", default=0.5)
     p.add_argument("--qual_perc_cutoff", default=0.20)
+    p.add_argument("--file_read_limit", default=1e6)
 
     if len(sys.argv) < 2:
         p.print_help()
@@ -386,18 +367,8 @@ def check_path(args):
         raise IOError("%s does not exists counts()" % not_exist)
 
 
-def setup_db():
-    db = lite.connect("cache.db")
-    # db.execute("drop table counts")
-    db.execute("create table if not exists counts(name TEXT PRIMARY KEY, num_reads INT)")
-    db.execute("create table if not exists filtered_counts(name TEXT PRIMARY KEY, num_reads INT)")
-    db.commit()
-    return db
-
-
 def main():
     args = get_args()
-    db = setup_db()
     rc = get_client(args)
     dview = rc[:]
     lview = rc.load_balanced_view()
@@ -406,9 +377,9 @@ def main():
     setup_cluster_nodes(dview)
     check_path(args)
     if args.read2:
-        process_paired(args, db)
+        process_paired(args)
     else:
-        process_single(args, db)
+        process_single(args)
     db.close()
 
 
