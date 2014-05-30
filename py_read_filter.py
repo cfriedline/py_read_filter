@@ -28,6 +28,7 @@ ch.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 ch.setFormatter(formatter)
 log.addHandler(ch)
+args = None
 
 def format_fastq_tuple(title, seq, qual):
     assert len(seq) == len(qual)
