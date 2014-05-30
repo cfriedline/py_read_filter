@@ -269,6 +269,7 @@ def read_count_file(count_file):
     return count_dict
 
 def process_paired(args):
+    lview = args.rc.load_balanced_view()
     log.info("starting paired processing")
     timer = stopwatch.Timer()
     splits = split_file([args.read1, args.read2], args)
@@ -283,7 +284,7 @@ def process_paired(args):
         pairs = 0
 
     for temp1, temp2 in izip(tmpfiles[0], tmpfiles[1]):
-        p = args.dview.apply_async(process_paired_files, (temp1, temp2, args))
+        p = lview.apply_async(process_paired_files, (temp1, temp2, args))
         pairs += 1
         results.append(p)
     completed = 0
@@ -301,7 +302,8 @@ def process_paired(args):
     return socket.gethostname(), sources, res, timer.elapsed
 
 
-def setup_cluster_nodes(dview):
+def setup_cluster_nodes(rc):
+    dview = rc[:]
     log.info("setting up cluster nodes")
     dview['process_paired'] = process_paired
     dview['process_paired_files'] = process_paired_files
@@ -364,11 +366,8 @@ def check_path(args):
 def main():
     args = get_args()
     rc = get_client(args)
-    dview = rc[:]
-    lview = rc.load_balanced_view()
-    args.dview=dview
-    args.lview=lview
-    setup_cluster_nodes(dview)
+    args.rc
+    setup_cluster_nodes(rc)
     check_path(args)
     if args.read2:
         process_paired(args)
