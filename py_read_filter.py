@@ -192,6 +192,9 @@ def eval_quality(q, args):
 
 
 def get_temp_file():
+    tmpdir = ".work"
+    if not os.path.exists(tmpdir):
+        os.mkdir(tmpdir)
     return tempfile.NamedTemporaryFile(delete=False, dir=".work")
 
 
