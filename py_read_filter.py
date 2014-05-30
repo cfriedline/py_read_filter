@@ -212,7 +212,6 @@ def process_paired_files(file1, file2, args):
     tmp2 = open(tmp1.name + ".1", "w")
 
     basename = [os.path.basename(x) for x in [file1, file2]]
-    queue.put(basename)
     count = 0
     n = 0
     trimmed = 0
