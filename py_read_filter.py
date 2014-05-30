@@ -288,7 +288,7 @@ def process_paired(args, rc):
     for temp1, temp2 in izip(tmpfiles[0], tmpfiles[1]):
         p = lview.apply_async(process_paired_files, args=(temp1,
                                                           temp2,
-                                                          args.tmpdir))
+                                                          args))
         pairs += 1
         results.append(p)
     completed = 0
