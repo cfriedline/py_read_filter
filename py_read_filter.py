@@ -138,10 +138,14 @@ def split_file(seqs, args):
             t.write(format_fastq_tuple(title, seq, qual))
             read_idx += 1
             read_count += 1
-            
+
             if read_idx == reads_per_file:
                 read_idx = 0
                 file_num += 1
+
+            if args.test_limit:
+                if read_count == args.test_limit:
+                    break
     for k, l in d.items():
         [x.close() for x in l]
         d[k] = [x.name for x in l]
@@ -340,6 +344,7 @@ def get_args():
     p.add_argument("--qual_perc_cutoff", default=0.20)
     p.add_argument("--file_read_limit", default=1e6)
     p.add_argument("--tmpdir", default="/data7/cfriedline/.work")
+    p.add_argument("--test_limit", default=0, type=int)
 
     if len(sys.argv) < 2:
         p.print_help()
