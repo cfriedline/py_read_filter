@@ -34,7 +34,7 @@ def format_fastq_tuple(title, seq, qual):
 
 
 def process_single_file(f, args):
-    tmp = get_temp_file()
+    tmp = get_temp_file(args)
     basename = os.path.basename(f)
     count = 0
     n = 0
@@ -67,10 +67,10 @@ def process_single_file(f, args):
     return tmp.name
 
 
-def collapse_results(source, results):
+def collapse_results(source, results, args):
     log.info("collapsing results")
     out = source.replace(".gz", "_processed.fastq")
-    temp = get_temp_file()
+    temp = get_temp_file(args)
     for r in results:
         for line in open(r):
             temp.write(line)
@@ -106,7 +106,7 @@ def process_single(args, db):
     pool.join()
     
     # collapse processed temp files
-    res = collapse_results(source, [x.get() for x in results])
+    res = collapse_results(source, [x.get() for x in results], args)
     
     # remove temp split source files
     for k, v in splits.items():
@@ -130,7 +130,7 @@ def split_file(seqs, args):
         file_num = 0
         for title, seq, qual in FastqGeneralIterator(get_file_handle(f)):
             if read_idx == 0:
-                t = get_temp_file()
+                t = get_temp_file(args)
                 print socket.gethostname(), t.name, file_num + 1, "/", num_cpu
                 d[f].append(t)
             t.write(format_fastq_tuple(title, seq, qual))
@@ -191,18 +191,17 @@ def eval_quality(q, args):
     return scores
 
 
-def get_temp_file():
-    tmpdir = ".work"
-    if not os.path.exists(tmpdir):
-        os.mkdir(tmpdir)
-    return tempfile.NamedTemporaryFile(delete=False, dir=".work")
+def get_temp_file(args):
+    if not os.path.exists(args.tmpdir):
+        os.makedirs(args.tmpdir)
+    return tempfile.NamedTemporaryFile(delete=False, dir=args.tmpdir)
 
 
 def process_paired_files(file1, file2, queue, args):
     f1 = FastqGeneralIterator(open(file1))
     f2 = FastqGeneralIterator(open(file2))
 
-    tmp1 = get_temp_file()
+    tmp1 = get_temp_file(args)
     tmp2 = open(tmp1.name + ".1", "w")
 
     basename = [os.path.basename(x) for x in [file1, file2]]
@@ -245,13 +244,13 @@ def process_paired_files(file1, file2, queue, args):
     return tmp1.name, tmp2.name
 
 
-def collapse_paired_results(sources, results):
+def collapse_paired_results(sources, results, args):
     log.info("collapsing paired results")
     outs = []
     for i in xrange(len(sources)):
         out = sources[i].replace(".gz", "_processed.fastq")
         outs.append(out)
-        temp = get_temp_file()
+        temp = get_temp_file(args)
         for r in [x[i] for x in results]:
             for line in open(r):
                 temp.write(line)
@@ -303,7 +302,7 @@ def process_paired(args):
             break
     pool.join()
 
-    res = collapse_paired_results(sources, [x.get() for x in results])
+    res = collapse_paired_results(sources, [x.get() for x in results], args)
 
     for i in xrange(len(tmpfiles)):
         for j in tmpfiles[i]:
@@ -337,6 +336,7 @@ def get_args():
     p.add_argument("--len_cutoff", default=0.5)
     p.add_argument("--qual_perc_cutoff", default=0.20)
     p.add_argument("--file_read_limit", default=1e6)
+    p.add_argument("--tmpdir", default="/data7/cfriedline/.work")
 
     if len(sys.argv) < 2:
         p.print_help()
