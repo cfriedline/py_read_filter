@@ -18,6 +18,8 @@ from fabric.api import local
 from IPython import embed
 import logging
 import sqlite3 as lite
+import pickle
+import dill
 
 log = logging.getLogger(__name__)
 log.propagate = False
@@ -205,7 +207,7 @@ def get_temp_file(args):
     return tempfile.NamedTemporaryFile(delete=False, dir=args.tmpdir)
 
 
-def process_paired_files(file1, file2, args):
+def process_paired_files(file1, file2, tmpdir):
     f1 = FastqGeneralIterator(open(file1))
     f2 = FastqGeneralIterator(open(file2))
 
@@ -268,9 +270,9 @@ def read_count_file(count_file):
         count_dict[data[0]] = int(data[1])
     return count_dict
 
-def process_paired(args):
+def process_paired(args, rc):
     log.info("starting paired processing")
-    lview = args.rc.load_balanced_view()
+    lview = rc.load_balanced_view()
     timer = stopwatch.Timer()
     splits = split_file([args.read1, args.read2], args)
     sources = []
@@ -284,7 +286,9 @@ def process_paired(args):
         pairs = 0
 
     for temp1, temp2 in izip(tmpfiles[0], tmpfiles[1]):
-        p = lview.apply_async(process_paired_files, args=(temp1, temp2, args))
+        p = lview.apply_async(process_paired_files, args=(temp1,
+                                                          temp2,
+                                                          args.tmpdir))
         pairs += 1
         results.append(p)
     completed = 0
@@ -364,14 +368,13 @@ def check_path(args):
 
 
 def main():
-    global args 
+    global args
     args = get_args()
     rc = get_client(args)
-    args.rc = rc
     setup_cluster_nodes(rc)
     check_path(args)
     if args.read2:
-        process_paired(args)
+        process_paired(args, rc)
     else:
         process_single(args)
     db.close()
