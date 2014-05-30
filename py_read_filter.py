@@ -207,8 +207,8 @@ def get_temp_file(args):
     return tempfile.NamedTemporaryFile(delete=False, dir=args.tmpdir)
 
 
-def process_paired_files(args):
-    file1, file2, args = args
+def process_paired_files(argv):
+    file1, file2, args = argv
     f1 = FastqGeneralIterator(open(file1))
     f2 = FastqGeneralIterator(open(file2))
 
