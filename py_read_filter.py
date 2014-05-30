@@ -285,7 +285,7 @@ def process_paired(args):
 
     for temp1, temp2 in izip(tmpfiles[0], tmpfiles[1]):
         log.warn(temp1, temp2)
-        p = lview.apply_async(process_paired_files, (temp1, temp2, args))
+        p = lview.apply_async(process_paired_files, args=(temp1, temp2, args))
         pairs += 1
         results.append(p)
     completed = 0
