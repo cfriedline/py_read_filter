@@ -122,10 +122,11 @@ def get_file_handle(f):
     return open(f)
 
 def split_file(seqs, args):
+    log.info("splitting files")
     d = defaultdict(list)
     num_cpu = multiprocessing.cpu_count()
     for f in seqs:
-        log.info(f)
+        log.info("splitting %s" % f)
         reads_per_file = args.file_read_limit
         read_idx = 0
         file_num = 0
@@ -268,8 +269,8 @@ def read_count_file(count_file):
     return count_dict
 
 def process_paired(args):
-    lview = args.rc.load_balanced_view()
     log.info("starting paired processing")
+    lview = args.rc.load_balanced_view()
     timer = stopwatch.Timer()
     splits = split_file([args.read1, args.read2], args)
     sources = []
@@ -283,7 +284,7 @@ def process_paired(args):
         pairs = 0
 
     for temp1, temp2 in izip(tmpfiles[0], tmpfiles[1]):
-        p = process_paired_files(temp1, temp2, args)
+        p = lview.apply_async(process_paired_files, args=(temp1, temp2, args))
         pairs += 1
         results.append(p)
     completed = 0
