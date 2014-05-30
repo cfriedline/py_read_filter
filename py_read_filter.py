@@ -355,20 +355,19 @@ def setup_cluster_nodes(rc):
 
 def get_args():
     p = argparse.ArgumentParser(description="Python Read Filterer")
-    p.add_argument("--read1", default=None)
-    p.add_argument("--read2", default=None)
-    p.add_argument("--cluster_profile", default="default")
-    p.add_argument("--win_size", default=5)
-    p.add_argument("--qual_cutoff", default=30)
-    p.add_argument("--len_cutoff", default=0.5)
-    p.add_argument("--qual_perc_cutoff", default=0.20)
-    p.add_argument("--file_read_limit", default=1e6)
-    p.add_argument("--tmpdir", default="/data7/cfriedline/.work")
-    p.add_argument("--test_limit", default=0, type=int)
+    p.add_argument("--read1", default=None, help = "string (default: %(default)s)")
+    p.add_argument("--read2", default=None, help = "string (default: %(default)s)")
+    p.add_argument("--cluster_profile", default="default", help = "string (default: %(default)s)")
+    p.add_argument("--win_size", default=5, help = "int (default: %(default)s)")
+    p.add_argument("--qual_cutoff", default=30, help = "float (default: %(default)s)")
+    p.add_argument("--len_cutoff", default=0.5, help = "float (default: %(default)s)")
+    p.add_argument("--qual_perc_cutoff", default=0.20, help = "float (default: %(default)s)")
+    p.add_argument("--file_read_limit", default=1000000, help = "int (default: %(default)s)")
+    p.add_argument("--tmpdir", default="/data7/cfriedline/.work", help = "string (default: %(default)s)")
+    p.add_argument("--test_limit", default=0, type=int, help = "int (default: %(default)s)")
 
     if len(sys.argv) < 2:
         p.print_help()
-        sys.exit()
 
     args = p.parse_args()
     return args
@@ -403,22 +402,18 @@ def check_path(args):
 def main():
     global args
     args = get_args()
-    rc = get_client(args)
-    setup_cluster_nodes(rc)
-    check_path(args)
-    if args.read2:
-        process_paired(args, rc)
-    else:
-        process_single(args)
-
-if __name__ == '__main__':
-    # log.warn("You must have an IPython cluster running to continue")
-    # answer = raw_input("Continue (y/n) ")
-    # if answer.lower() == "y":
     try:
-        main()
+        rc = get_client(args)
+        setup_cluster_nodes(rc)
+        check_path(args)
+        if args.read2:
+            process_paired(args, rc)
+        else:
+            process_single(args)
     except:
         traceback.print_exc()
-        # embed()
     finally:
         log.info("Done!")
+
+if __name__ == '__main__':
+    main()
