@@ -34,7 +34,7 @@ def format_fastq_tuple(title, seq, qual):
 
 
 def process_single_file(f, args):
-    tmp = tempfile.NamedTemporaryFile(delete=False)
+    tmp = get_temp_file()
     basename = os.path.basename(f)
     count = 0
     n = 0
@@ -70,7 +70,7 @@ def process_single_file(f, args):
 def collapse_results(source, results):
     log.info("collapsing results")
     out = source.replace(".gz", "_processed.fastq")
-    temp = tempfile.NamedTemporaryFile(delete=False)
+    temp = get_temp_file()
     for r in results:
         for line in open(r):
             temp.write(line)
@@ -123,16 +123,14 @@ def get_file_handle(f):
 def split_file(seqs, args):
     d = defaultdict(list)
     num_cpu = multiprocessing.cpu_count()
-    for seq in seqs:
-        print "seq=", seq
-        f, num = seq
+    for f in seqs:
         print f
-        reads_per_file = float(num)//num_cpu
+        reads_per_file = args.file_read_limit
         read_idx = 0
         file_num = 0
         for title, seq, qual in FastqGeneralIterator(get_file_handle(f)):
             if read_idx == 0:
-                t = tempfile.NamedTemporaryFile(delete=False)
+                t = get_temp_file()
                 print socket.gethostname(), t.name, file_num + 1, "/", num_cpu
                 d[f].append(t)
             t.write(format_fastq_tuple(title, seq, qual))
@@ -193,11 +191,15 @@ def eval_quality(q, args):
     return scores
 
 
+def get_temp_file():
+    return tempfile.NamedTemporaryFile(delete=False, dir=".work")
+
+
 def process_paired_files(file1, file2, queue, args):
     f1 = FastqGeneralIterator(open(file1))
     f2 = FastqGeneralIterator(open(file2))
 
-    tmp1 = tempfile.NamedTemporaryFile(delete=False)
+    tmp1 = get_temp_file()
     tmp2 = open(tmp1.name + ".1", "w")
 
     basename = [os.path.basename(x) for x in [file1, file2]]
@@ -246,7 +248,7 @@ def collapse_paired_results(sources, results):
     for i in xrange(len(sources)):
         out = sources[i].replace(".gz", "_processed.fastq")
         outs.append(out)
-        temp = tempfile.NamedTemporaryFile(delete=False)
+        temp = get_temp_file()
         for r in [x[i] for x in results]:
             for line in open(r):
                 temp.write(line)
