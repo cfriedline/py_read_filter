@@ -20,6 +20,7 @@ import logging
 import sqlite3 as lite
 
 log = logging.getLogger(__name__)
+log.propagate = False
 log.handlers = []
 log.setLevel(logging.DEBUG)
 ch = logging.StreamHandler(sys.stdout)
@@ -130,13 +131,13 @@ def split_file(seqs, args):
         file_num = 0
         read_count = 0
         for title, seq, qual in FastqGeneralIterator(get_file_handle(f)):
-            read_count += 1
             if read_idx == 0:
                 t = get_temp_file(args)
                 log.info("%s, %s, %d" % (socket.gethostname(), t.name, read_count))
                 d[f].append(t)
             t.write(format_fastq_tuple(title, seq, qual))
             read_idx += 1
+            read_count += 1
             
             if read_idx == reads_per_file:
                 read_idx = 0
