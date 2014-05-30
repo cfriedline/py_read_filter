@@ -281,7 +281,7 @@ def get_num_seqs(f, db):
         for title, seq, qual in FastqGeneralIterator(get_file_handle(f)):
             count += 1
         log.info("%d reads in %s" % (count, f))
-        db.execute("insert into counts values (%s, %d)" % (f, count))
+        db.execute("insert into counts values ('%s', %d)" % (f, count))
         db.commit()
     return (f, count)
 
@@ -410,6 +410,7 @@ def main():
     else:
         process_single(args, db)
     db.close()
+
 
 if __name__ == '__main__':
     # log.warn("You must have an IPython cluster running to continue")
