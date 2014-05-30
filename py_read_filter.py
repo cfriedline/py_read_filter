@@ -128,10 +128,12 @@ def split_file(seqs, args):
         reads_per_file = args.file_read_limit
         read_idx = 0
         file_num = 0
+        read_count = 0
         for title, seq, qual in FastqGeneralIterator(get_file_handle(f)):
+            read_count += 1
             if read_idx == 0:
                 t = get_temp_file(args)
-                log.info(socket.gethostname(), t.name, file_num + 1, "/", num_cpu)
+                log.info(socket.gethostname(), t.name, read_count)
                 d[f].append(t)
             t.write(format_fastq_tuple(title, seq, qual))
             read_idx += 1
