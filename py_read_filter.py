@@ -309,6 +309,29 @@ def process_paired(args, rc):
 
 def setup_cluster_nodes(rc):
     dview = rc[:]
+    with dview.sync_imports():
+        from IPython.parallel import Client
+        import sys
+        import os
+        import socket
+        import numpy
+        import gzip
+        import tempfile
+        from Bio.SeqIO.QualityIO import FastqGeneralIterator
+        from itertools import izip
+        import shutil
+        import stopwatch
+        import traceback
+        from collections import defaultdict, deque
+        from multiprocessing import Pool, Manager
+        import multiprocessing
+        import argparse
+        from fabric.api import local
+        from IPython import embed
+        import logging
+        import sqlite3 as lite
+        import pickle
+        import dill
     log.info("setting up cluster nodes")
     dview['process_paired'] = process_paired
     dview['process_paired_files'] = process_paired_files
