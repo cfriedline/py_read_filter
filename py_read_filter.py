@@ -293,9 +293,9 @@ def process_paired(args, rc):
         results.append(p)
     completed = 0
     for item in results:
-        r.get()
+        res = item.get()
         completed += 1
-        log.info(item, completed)
+        log.info("%s (%d/%d)" % (res, completed, len(results)))
 
     res = collapse_paired_results(sources, [x.get() for x in results], args)
 
