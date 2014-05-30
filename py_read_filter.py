@@ -213,9 +213,7 @@ def process_paired_files(file1, file2, args):
     f1 = FastqGeneralIterator(open(file1))
     f2 = FastqGeneralIterator(open(file2))
 
-    return (file1, file2, args, type(args))
-
-    tmp1 = get_temp_file(args.tmpdir)
+    tmp1 = get_temp_file(args)
     tmp2 = open(tmp1.name + ".1", "w")
 
     basename = [os.path.basename(x) for x in [file1, file2]]
