@@ -366,7 +366,7 @@ def check_path(args):
 def main():
     args = get_args()
     rc = get_client(args)
-    args.rc
+    args.rc = rc
     setup_cluster_nodes(rc)
     check_path(args)
     if args.read2:
