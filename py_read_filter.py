@@ -133,7 +133,7 @@ def split_file(seqs, args):
             read_count += 1
             if read_idx == 0:
                 t = get_temp_file(args)
-                log.info(socket.gethostname(), t.name, read_count)
+                log.info("%s, %s, %d" % (socket.gethostname(), t.name, read_count))
                 d[f].append(t)
             t.write(format_fastq_tuple(title, seq, qual))
             read_idx += 1
