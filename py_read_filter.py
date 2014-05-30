@@ -120,7 +120,7 @@ def get_file_handle(f):
          return gzip.open(f)
     return open(f)
 
-def split_file(seqs):
+def split_file(seqs, args):
     d = defaultdict(list)
     num_cpu = multiprocessing.cpu_count()
     for seq in seqs:
@@ -268,10 +268,8 @@ def read_count_file(count_file):
 
 def process_paired(args):
     log.info("starting paired processing")
-    seqs = [get_num_seqs(args.read1), get_num_seqs(args.read2)]
-    return
     timer = stopwatch.Timer()
-    splits = split_file([seqs[0], seqs[1]])
+    splits = split_file([args.read1, args.read2], args)
     sources = []
     tmpfiles = []
     pool = Pool()
