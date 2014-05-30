@@ -410,8 +410,6 @@ def main():
         process_paired(args, rc)
     else:
         process_single(args)
-    db.close()
-
 
 if __name__ == '__main__':
     # log.warn("You must have an IPython cluster running to continue")
