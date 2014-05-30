@@ -344,6 +344,7 @@ def setup_cluster_nodes(rc):
     dview['collapse_results'] = collapse_results
     dview['process_single_file'] = process_single_file
     dview['format_fastq_tuple'] = format_fastq_tuple
+    dview['get_temp_file'] = get_temp_file
 
 
 def get_args():
