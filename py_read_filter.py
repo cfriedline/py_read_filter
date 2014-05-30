@@ -250,7 +250,12 @@ def collapse_paired_results(sources, results, args):
     log.info("collapsing paired results")
     outs = []
     for i in xrange(len(sources)):
-        out = sources[i].replace(".gz", "_processed.fastq")
+        out = None
+        if sources[i].endswith(".gz"):
+            out = sources[i].replace(".gz", "_processed.fastq")
+        else:
+            out = sources[i].replace(".fastq", "_processed_fastq")
+        out = os.path.join(args.tmpdir, os.path.basename(out))
         outs.append(out)
         temp = get_temp_file(args)
         for r in [x[i] for x in results]:
