@@ -204,7 +204,7 @@ def get_temp_file(args):
     return tempfile.NamedTemporaryFile(delete=False, dir=args.tmpdir)
 
 
-def process_paired_files(file1, file2, queue, args):
+def process_paired_files(file1, file2, args):
     f1 = FastqGeneralIterator(open(file1))
     f2 = FastqGeneralIterator(open(file2))
 
@@ -238,16 +238,7 @@ def process_paired_files(file1, file2, queue, args):
                 tmp2.write(format_fastq_tuple(h2, s2, q2))
         else:
             n += 1
-
-        count += 1
-        if count % 10000 == 0:
-            queue.put("%s, %s, %d, %d, %d" % (socket.gethostname(),
-                                              basename,
-                                              count,
-                                              n,
-                                              trimmed))
     [x.close() for x in [tmp1, tmp2]]
-    queue.put("DONE")
     return tmp1.name, tmp2.name
 
 
@@ -283,9 +274,6 @@ def process_paired(args):
     splits = split_file([args.read1, args.read2], args)
     sources = []
     tmpfiles = []
-    pool = Pool()
-    manager = Manager()
-    queue = manager.Queue()
 
     for k, v in splits.items():
         sources.append(k)
@@ -295,19 +283,14 @@ def process_paired(args):
         pairs = 0
 
     for temp1, temp2 in izip(tmpfiles[0], tmpfiles[1]):
-        p = pool.apply_async(process_paired_files, (temp1, temp2, queue, args))
+        p = args.dview.apply_async(process_paired_files, (temp1, temp2, args))
         pairs += 1
         results.append(p)
-    pool.close()
     completed = 0
-    while True:
-        item = queue.get()
+    for item in results:
+        r.get()
+        completed += 1
         log.info(item, completed)
-        if item == "DONE":
-            completed += 1
-        if completed == pairs:
-            break
-    pool.join()
 
     res = collapse_paired_results(sources, [x.get() for x in results], args)
 
