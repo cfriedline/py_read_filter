@@ -31,6 +31,7 @@ formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(messag
 ch.setFormatter(formatter)
 log.addHandler(ch)
 
+
 def format_fastq_tuple(title, seq, qual):
     assert len(seq) == len(qual)
     return "@%s\n%s\n+\n%s\n" % (title, seq, qual)
@@ -46,7 +47,7 @@ def process_single_file(f, args):
         if seq.startswith("N"):
             seq = seq[1:]
             qual = qual[1:]
-            
+
         if "N" not in seq:
             scores = eval_quality(qual, args)
             if scores:
@@ -57,15 +58,15 @@ def process_single_file(f, args):
                 tmp.write(format_fastq_tuple(title, seq, qual))
         else:
             n += 1
-            
+
         count += 1
-        
+
         if count % 10000 == 0:
             log.info("%s, %s, %d, %d, %d" % (socket.gethostname(),
-                                          basename,
-                                          count,
-                                          n,
-                                          trimmed))
+                                             basename,
+                                             count,
+                                             n,
+                                             trimmed))
     tmp.close()
     return tmp.name
 
@@ -98,19 +99,19 @@ def process_single(args):
         source = k
         for f in temp_files:
             try:
-                p = pool.apply_async(process_single_file, (f,args))
+                p = pool.apply_async(process_single_file, (f, args))
                 results.append(p)
-#                 print f
-#                 process_single_file(f)
+            #                 print f
+            #                 process_single_file(f)
             except:
                 traceback.print_exc()
 
     pool.close()
     pool.join()
-    
+
     # collapse processed temp files
     res = collapse_results(source, [x.get() for x in results], args)
-    
+
     # remove temp split source files
     for k, v in splits.items():
         x = [os.remove(x) for x in v]
@@ -120,8 +121,9 @@ def process_single(args):
 
 def get_file_handle(f):
     if f.endswith('.gz'):
-         return gzip.open(f)
+        return gzip.open(f)
     return open(f)
+
 
 def split_file(seqs, args):
     log.info("splitting files")
@@ -156,11 +158,11 @@ def split_file(seqs, args):
 
 
 def convert_qual(q):
-    return ord(q)-33
+    return ord(q) - 33
 
 
 def get_qual_scores(q):
-    qual = [ord(x)-33 for x in q]  # list comps seems to be fastest here
+    qual = [ord(x) - 33 for x in q]  # list comps seems to be fastest here
     return numpy.array([qual, numpy.mean(qual)])
 
 
@@ -170,7 +172,7 @@ def eval_quality(q, args):
 
     if qual[1] < args.qual_cutoff:
         return False
-    
+
     below_cutoff = 0.0
     window = deque(maxlen=args.win_size)
     win_end = args.win_size
@@ -183,15 +185,15 @@ def eval_quality(q, args):
             if numpy.mean(window) < args.qual_cutoff:
                 if last_good is None:
                     last_good = win_end
-                    if float(last_good)/len(scores) < args.len_cutoff:
+                    if float(last_good) / len(scores) < args.len_cutoff:
                         return False  # then it's too short
             win_end += 1
-    perc_below = below_cutoff/len(scores)
+    perc_below = below_cutoff / len(scores)
 
     if last_good:
         # trim the scores if it will be long enough
-        scores = scores[0:(last_good-1)]
-        
+        scores = scores[0:(last_good - 1)]
+
     # perc_len = float(len(scores))/len(qual[0])
 
     if perc_below > args.qual_perc_cutoff:
@@ -262,6 +264,7 @@ def collapse_paired_results(sources, results, args):
             os.remove(p)
     return outs
 
+
 def read_count_file(count_file):
     count_dict = {}
     for line in open(count_file):
@@ -269,6 +272,7 @@ def read_count_file(count_file):
         data = line.split("\t")
         count_dict[data[0]] = int(data[1])
     return count_dict
+
 
 def process_paired(args, rc):
     log.info("starting paired processing")
@@ -286,7 +290,7 @@ def process_paired(args, rc):
         pairs = 0
 
     for temp1, temp2 in izip(tmpfiles[0], tmpfiles[1]):
-        p = lview.apply_async(process_paired_files, (temp1,temp2,args,))
+        p = lview.apply_async(process_paired_files, temp1, temp2, args)
         pairs += 1
         results.append(p)
     completed = 0
@@ -364,6 +368,7 @@ def get_args():
     args = p.parse_args()
     return args
 
+
 def get_client(args):
     log.info("connecting to cluster %s" % args.cluster_profile)
     c = None
@@ -372,6 +377,7 @@ def get_client(args):
         return c
     except:
         raise Exception("Can't connect to IPython cluster named '%s'" % args.cluster_profile)
+
 
 def check_path(args):
     log.info("checking paths")
