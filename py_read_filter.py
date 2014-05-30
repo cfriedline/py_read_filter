@@ -254,7 +254,7 @@ def collapse_paired_results(sources, results, args):
         if sources[i].endswith(".gz"):
             out = sources[i].replace(".gz", "_processed.fastq")
         else:
-            out = sources[i].replace(".fastq", "_processed_fastq")
+            out = sources[i].replace(".fastq", "_processed.fastq")
         out = os.path.join(args.tmpdir, os.path.basename(out))
         outs.append(out)
         temp = get_temp_file(args)
