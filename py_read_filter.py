@@ -208,7 +208,7 @@ def get_temp_file(args):
 
 
 def process_paired_files(argv):
-    log.info(argv)
+    print argv
     file1, file2, args = argv
     f1 = FastqGeneralIterator(open(file1))
     f2 = FastqGeneralIterator(open(file2))
