@@ -176,7 +176,7 @@ def eval_quality(q, args):
         window.append(s)
         if s < args.qual_cutoff:
             below_cutoff += 1  # keep track of scores below the quality cutoff
-        if len(window) == win_size:
+        if len(window) == args.win_size:
             if numpy.mean(window) < args.qual_cutoff:
                 if last_good is None:
                     last_good = win_end
