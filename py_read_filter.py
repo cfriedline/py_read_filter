@@ -58,11 +58,11 @@ def process_single_file(f, args):
         count += 1
         
         if count % 10000 == 0:
-            print "%s, %s, %d, %d, %d" % (socket.gethostname(),
+            log.info("%s, %s, %d, %d, %d" % (socket.gethostname(),
                                           basename,
                                           count,
                                           n,
-                                          trimmed)
+                                          trimmed))
     tmp.close()
     return tmp.name
 
@@ -81,13 +81,13 @@ def collapse_results(source, results, args):
     return out
 
 
-def process_single(args, db):
+def process_single(args):
     log.info("starting single processing")
-    seqs = get_num_seqs(args.read1, args)
+    seqs = args.read1
     timer = stopwatch.Timer()
     pool = Pool()
     hostname = socket.gethostname()
-    splits = split_file(seqs)
+    splits = split_file(seqs, args)
     results = []
     source = None
 
@@ -124,14 +124,14 @@ def split_file(seqs, args):
     d = defaultdict(list)
     num_cpu = multiprocessing.cpu_count()
     for f in seqs:
-        print f
+        log.info(f)
         reads_per_file = args.file_read_limit
         read_idx = 0
         file_num = 0
         for title, seq, qual in FastqGeneralIterator(get_file_handle(f)):
             if read_idx == 0:
                 t = get_temp_file(args)
-                print socket.gethostname(), t.name, file_num + 1, "/", num_cpu
+                log.info(socket.gethostname(), t.name, file_num + 1, "/", num_cpu)
                 d[f].append(t)
             t.write(format_fastq_tuple(title, seq, qual))
             read_idx += 1
@@ -295,7 +295,7 @@ def process_paired(args):
     completed = 0
     while True:
         item = queue.get()
-        print item, completed
+        log.info(item, completed)
         if item == "DONE":
             completed += 1
         if completed == pairs:
