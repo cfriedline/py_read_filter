@@ -322,9 +322,8 @@ def setup_cluster_nodes(dview):
     dview['collapse_results'] = collapse_results
     dview['process_single_file'] = process_single_file
     dview['format_fastq_tuple'] = format_fastq_tuple
-    dview['get_num_seqs'] = get_num_seqs
 
-    
+
 def get_args():
     p = argparse.ArgumentParser(description="Python Read Filterer")
     p.add_argument("--read1", default=None)
