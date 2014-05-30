@@ -170,17 +170,17 @@ def eval_quality(q, args):
     
     below_cutoff = 0.0
     window = deque(maxlen=args.win_size)
-    win_end = win_size
+    win_end = args.win_size
     last_good = None
     for s in scores:
         window.append(s)
         if s < args.qual_cutoff:
             below_cutoff += 1  # keep track of scores below the quality cutoff
         if len(window) == win_size:
-            if numpy.mean(window) < qual_cutoff:
+            if numpy.mean(window) < args.qual_cutoff:
                 if last_good is None:
                     last_good = win_end
-                    if float(last_good)/len(scores) < len_cutoff:
+                    if float(last_good)/len(scores) < args.len_cutoff:
                         return False  # then it's too short
             win_end += 1
     perc_below = below_cutoff/len(scores)
