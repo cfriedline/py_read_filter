@@ -20,6 +20,7 @@ import logging
 import sqlite3 as lite
 
 log = logging.getLogger(__name__)
+log.handlers = []
 log.setLevel(logging.DEBUG)
 ch = logging.StreamHandler(sys.stdout)
 ch.setLevel(logging.DEBUG)
